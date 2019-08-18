@@ -25,9 +25,15 @@ struct URLFactory {
         return url
     }
     
-    static func iconUrl(for iconString: String) -> URL {
+    static func iconUrl(for iconString: String?) -> URL? {
         
+        guard let iconString = iconString else { return nil }
         
+        let urlString = "http://openweathermap.org/img/w/\(iconString)"
+        guard let url = URL(string: urlString) else {
+            fatalError("Invalid string for url")
+        }
+        return url
     }
     
 }

@@ -45,6 +45,11 @@ struct WeatherReport: Codable {
     var longitude: Double? {
         return coord?.lon
     }
+    
+    var isStillValid: Bool {
+        
+        return lastUpdated.isLessThan24HoursAgo
+    }
 }
 
 

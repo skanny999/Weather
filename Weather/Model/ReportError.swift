@@ -10,6 +10,8 @@ import Foundation
 
 enum ReportError: Error {
     
+    case connectionError
+    case notCachedDataError
     case networkError(_ error: Error?)
     case parsingError(_ error: Error?)
     case cachingError(_ error: Error?)
@@ -22,6 +24,11 @@ extension ReportError {
     var userDescription: String {
         
         switch self {
+            
+        case .connectionError:
+            return "There isn't an active network connection"
+        case .notCachedDataError:
+            return "There is not previously saved data available"
         case .networkError(let error):
             return "There was a problem downloading the data from the internet. \(error?.localizedDescription ?? ""))"
         case .parsingError(let error):

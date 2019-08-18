@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreLocation
+import Network
 
 class NetworkProvider {
     
@@ -15,6 +16,7 @@ class NetworkProvider {
         
         let url = URLFactory.weatherUrl(for: location)
         getData(fromUrl: url, completion: completion)
+
     }
 }
 
@@ -24,8 +26,10 @@ private extension NetworkProvider {
         
         let task = session.dataTask(with: url) { (data, response, error) in
             
-            if let error = error {
-                completion(nil, ReportError.networkError(error))
+            if let error = error as NSError? {
+                
+                let networkError = (error.code == NSURLErrorNotConnectedToInternet) ? ReportError.connectionError : ReportError.networkError(error)
+                completion(nil, networkError)
             }
             
             guard let response = response as? HTTPURLResponse else {
@@ -48,4 +52,5 @@ private extension NetworkProvider {
         
         task.resume()
     }
+
 }

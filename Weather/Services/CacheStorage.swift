@@ -10,14 +10,14 @@ import Foundation
 
 class CacheStorage {
     
-    static func saveModel<T: Codable>(_ model: T) {
+    static func saveReport(_ report: WeatherReport) {
         
-        store(model, as: "Model")
+        store(report, as: "WeatherReport")
     }
     
-    static func retrieveModel<T: Codable>() -> T? {
+    static func retrieveReport() -> WeatherReport? {
         
-        return retrieve("Model", as: T.self)
+        return retrieve("WeatherReport", as: WeatherReport.self)
     }
 }
 
@@ -33,9 +33,6 @@ private extension CacheStorage {
         
         do {
             let data = try JSONEncoder().encode(object)
-            if FileManager.default.fileExists(atPath: url.path) {
-                try FileManager.default.removeItem(at: url)
-            }
             FileManager.default.createFile(atPath: url.path, contents: data, attributes: nil)
         } catch {
             //throw error

@@ -13,7 +13,7 @@ class LocationManager: NSObject {
     
     private let locationManager = CLLocationManager()
     var updateLocation: ((CLLocation?, Error?) -> Void)?
-    private var currentLocation: CLLocation?
+
     
     static let shared = LocationManager()
     
@@ -21,9 +21,6 @@ class LocationManager: NSObject {
         super.init()
         configureLocationManager()
     }
-}
-
-extension LocationManager: CLLocationManagerDelegate {
     
     private func configureLocationManager() {
         
@@ -36,6 +33,9 @@ extension LocationManager: CLLocationManagerDelegate {
             locationManager.requestWhenInUseAuthorization()
         }
     }
+}
+
+extension LocationManager: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         

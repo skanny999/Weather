@@ -52,25 +52,24 @@ class WeatherReportViewModel {
     
     var iconURL: URL? {
         
-        
+        return URLFactory.iconUrl(for: weatherReport?.iconString)
     }
     
-    var temperature: String? {
+    var temperature: String {
         
-        guard let temp = main?.temp else { return nil }
+        guard let temp = weatherReport?.temperature else { return "N/A" }
         return "\(Int(temp))°C"
     }
     
     var windSpeed: String? {
         
-        guard let speed = wind?.speed else { return nil }
+        guard let speed = weatherReport?.windSpeed else { return "N/A" }
         return "\(Int(speed))mph"
     }
     
     var windDirection: String? {
         
-        guard let degree = wind?.deg else { return nil }
-        return degree.cardinalDirection
+        return weatherReport?.windDirection
     }
     
     
