@@ -7,44 +7,54 @@
 //
 
 import Foundation
+import UIKit
 
 class WeatherReportViewModel {
     
-    private var weatherReport: WeatherReport? {
-        didSet {
-            if let weather = weatherReport {
-                
-                //update viewController
-            }
-        }
-    }
+    private var weatherReport: WeatherReport?
     
     init() {
         
-        DataProvider.getWeatherReport { (weatherReport, error) in
+        configureDataUpdater()
+        DataProvider.shared.getWeatherReport(isRefreshing: false)
+        displaySpinner?(true)
+    }
+    
+    
+    private func configureDataUpdater() {
+        
+        DataProvider.shared.weatherReportUpdater = { [weak self] (weatherReport, error) in
+            
+            self?.displaySpinner?(false)
             
             if let error = error {
-                
-                print(error)
+                self?.displayAlert?(error)
                 return
             }
             
-            if let weatherReport = weatherReport {
-                
-                self.weatherReport = weatherReport
-                
-            } else {
-                
-                // show error
+            guard let weatherReport = weatherReport else {
+                self?.displayAlert?(ReportError.unknownError)
+                return
             }
+            
+            self?.weatherReport = weatherReport
+            self?.updateReport?()
         }
     }
     
-    //testing
+    //test initializer
     
     init(with weatherReport: WeatherReport) {
         self.weatherReport = weatherReport
     }
+    
+    
+    // View Updater
+    
+    
+    var updateReport: (() -> Void)?
+    var displayAlert: ((ReportError) -> Void)?
+    var displaySpinner: ((Bool) -> Void)?
     
     var conditions: String {
         return weatherReport?.conditions ?? "N/A"
@@ -61,7 +71,7 @@ class WeatherReportViewModel {
         return "\(Int(temp))°C"
     }
     
-    var windSpeed: String? {
+    var windSpeed: String {
         
         guard let speed = weatherReport?.windSpeed else { return "N/A" }
         return "\(Int(speed))mph"
@@ -69,8 +79,42 @@ class WeatherReportViewModel {
     
     var windDirection: String? {
         
-        return weatherReport?.windDirection
+        return weatherReport?.windDirection ?? "N/A"
     }
     
+    var latitude: String {
+        
+        if let latitude = weatherReport?.latitude {
+            return "Latitude: \(String(latitude))"
+        } else {
+            return "Latitude: N/A"
+        }
+    }
     
+    var longitude: String {
+        
+        if let longitude = weatherReport?.longitude {
+            return "Longitude: \(String(longitude))"
+        } else {
+            return "Longitude: N/A"
+        }
+    }
+    
+    var lastUpdated: String {
+        if let lastUpdatedDate = weatherReport?.lastUpdated {
+            return "Last updated: \(lastUpdatedDate.longDescription)"
+        }
+        return ""
+    }
+}
+
+// ViewController Delegate
+
+extension WeatherReportViewModel: WeatherReportViewControllerDelegate {
+    
+    func viewControllerDidTapRefresh(_ viewController: UIViewController) {
+        
+        DataProvider.shared.getWeatherReport(isRefreshing: true)
+        displaySpinner?(true)
+    }
 }

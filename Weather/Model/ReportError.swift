@@ -17,18 +17,23 @@ enum ReportError: Error {
     case cachingError(_ error: Error?)
     case locationAuthorizationError
     case locationFail(_ error: Error?)
+    case unknownError
 }
 
 extension ReportError {
+    
+    var title: String {
+        return "Ooops"
+    }
     
     var userDescription: String {
         
         switch self {
             
         case .connectionError:
-            return "There isn't an active network connection"
+            return "Please connect to the internet to refresh data"
         case .notCachedDataError:
-            return "There is not previously saved data available"
+            return "You seem to be offline and there is not recent data previously saved available. Please make sure you are connected to the internet and try again"
         case .networkError(let error):
             return "There was a problem downloading the data from the internet. \(error?.localizedDescription ?? ""))"
         case .parsingError(let error):
@@ -39,6 +44,8 @@ extension ReportError {
             return "Access to your location was denied. Please change authorization in Settings"
         case .locationFail(let error):
             return "There was a problem retriving your location. \(error?.localizedDescription ?? "")"
+        case .unknownError:
+            return "There was an unknown error updating the report"
         }
     }
 }

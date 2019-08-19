@@ -9,17 +9,27 @@
 import Foundation
 import CoreLocation
 
+protocol LocationDelegate: class {
+    
+    func locationDidUpdate(with location: CLLocation?, _ error: Error?)
+}
+
 class LocationManager: NSObject {
     
-    private let locationManager = CLLocationManager()
-    var updateLocation: ((CLLocation?, Error?) -> Void)?
-
-    
     static let shared = LocationManager()
+    var currentLocation: CLLocation?
+    weak var delegate: LocationDelegate?
+
+    private let locationManager = CLLocationManager()
     
     private override init() {
         super.init()
         configureLocationManager()
+    }
+    
+    func requestUpdateLocation() {
+        
+        locationManager.requestLocation()
     }
     
     private func configureLocationManager() {
@@ -27,10 +37,15 @@ class LocationManager: NSObject {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.delegate = self
         
-        if CLLocationManager.locationServicesEnabled() {
-            locationManager.requestLocation()
-        } else {
+        switch CLLocationManager.authorizationStatus() {
+        case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        case .restricted, .denied:
+            break
+        @unknown default:
+            fatalError()
         }
     }
 }
@@ -39,17 +54,20 @@ extension LocationManager: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
-            updateLocation?(locations.last, nil)
+        delegate?.locationDidUpdate(with: locations.first, nil)
+        currentLocation = locations.first
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         
-        status.rawValue == 4 ? locationManager.requestLocation() : updateLocation?(nil, ReportError.locationAuthorizationError)
+        if status == .authorizedWhenInUse {
+            locationManager.requestLocation()
+        }
     }
     
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         
-        updateLocation?(nil, ReportError.locationFail(error))
+        delegate?.locationDidUpdate(with: nil, ReportError.locationFail(error))
     }
 }

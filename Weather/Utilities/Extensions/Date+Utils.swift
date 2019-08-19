@@ -12,6 +12,15 @@ extension Date {
     
     var isLessThan24HoursAgo: Bool {
 
-        return self < Date(timeIntervalSinceNow: -86400)
+        return self > Date(timeIntervalSinceNow: -86400)
+    }
+    
+    var longDescription: String {
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .short
+        
+        return formatter.string(from: self)
     }
 }

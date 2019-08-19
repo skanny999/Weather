@@ -7,79 +7,112 @@
 //
 
 import Foundation
+import CoreLocation
+import Network
+
 
 class DataProvider {
     
-    static func getWeatherReport(completion:@escaping (WeatherReport?, Error?) -> Void) {
-        
-        //get current location
-        
-        LocationManager.shared.updateLocation = { (location, error) in
-            
-            if let error = error {
-                completion(nil, error)
-                return
-            }
-            
-            guard let location = location else {
-                completion(nil, ReportError.locationFail(nil))
-                return
-            }
-            
-            // make request with the coordinates
-            
-            NetworkProvider.getWeatherReport(for: location, completion: { (data, error) in
-                
-                if let error = error {
-                    
-                    // Deal with network error
-                    
-                    reportCompletion(with: error, completion: completion)
-                    
-                } else {
-                    
-                    // Process Data
-                    
-                    weatherReport(from: data, completion: completion)
-                }
-            })
-        }
-    }
-}
-
-extension DataProvider {
+    static let shared = DataProvider()
     
-    static func reportCompletion(with error: Error, completion: @escaping (WeatherReport?, Error?) -> Void) {
+    private let locationManager: LocationManager
+    private let monitor = NWPathMonitor()
+    private var isConnected = false
+    
+    var weatherReportUpdater: ((WeatherReport?, ReportError?) -> Void)?
+    
+    init() {
         
-        guard case ReportError.connectionError = error else {
-            completion(nil, error)
+        locationManager = LocationManager.shared
+        locationManager.delegate = self
+        configureMonitor()
+    }
+    
+    private func configureMonitor() {
+        
+        monitor.pathUpdateHandler = { path in
+            
+            self.isConnected = path.status == .satisfied
+        }
+        let queue = DispatchQueue(label: "Monitor")
+        monitor.start(queue: queue)
+    }
+    
+    func getWeatherReport(isRefreshing: Bool) {
+        
+        guard isConnected else {
+            
+            isRefreshing ? weatherReportUpdater?(nil, ReportError.connectionError) : completeWithPreviousReport()
             return
         }
         
-        if let weatherReport = CacheStorage.retrieveReport(), weatherReport.isStillValid {
-            completion(weatherReport, nil)
+        if let location = LocationManager.shared.currentLocation {
+            
+            fetchWeatherReportData(for: location)
+            
         } else {
-            completion(nil, ReportError.notCachedDataError)
+            
+            LocationManager.shared.requestUpdateLocation()
         }
     }
-
     
-    static func weatherReport(from data: Data?, completion: @escaping (WeatherReport?, Error?) -> Void) {
+
+}
+
+
+private extension DataProvider {
+    
+    private func fetchWeatherReportData(for location: CLLocation) {
+        
+        NetworkProvider.getWeatherReport(for: location, completion: { [weak self] (data, error) in
+            
+            if let error = error {
+                
+                self?.weatherReportUpdater?(nil, ReportError.networkError(error))
+                
+            } else {
+                
+                self?.weatherReport(from: data)
+            }
+        })
+    }
+    
+    private func completeWithPreviousReport() {
+        
+        if let weatherReport = StorageCache.retrieveModel(), weatherReport.isStillValid {
+            weatherReportUpdater?(weatherReport, nil)
+        } else {
+            weatherReportUpdater?(nil, ReportError.notCachedDataError)
+        }
+    }
+    
+    // Data processor
+    
+    func weatherReport(from data: Data?) {
         
         guard let data = data else {
-            completion(nil, ReportError.networkError(nil))
+            weatherReportUpdater?(nil, ReportError.networkError(nil))
             return
         }
         
         do {
-            let weatherReport = try JSONDecoder().decode(WeatherReport.self, from: data)
-            completion(weatherReport, nil)
-            CacheStorage.saveReport(weatherReport)
+            var weatherReport = try JSONDecoder().decode(WeatherReport.self, from: data)
+            weatherReport.lastUpdated = Date()
+            weatherReportUpdater?(weatherReport, nil)
+            StorageCache.saveModel(weatherReport)
             
         } catch {
             
-            completion(nil, ReportError.parsingError(error))
+            weatherReportUpdater?(nil, ReportError.parsingError(error))
         }
     }
+}
+
+
+extension DataProvider: LocationDelegate {
     
+    func locationDidUpdate(with location: CLLocation?, _ error: Error?) {
+        
+        location == nil ? weatherReportUpdater?(nil, ReportError.locationFail(error)) : getWeatherReport(isRefreshing: false)
+    }
 }

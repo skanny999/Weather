@@ -28,8 +28,12 @@ private extension NetworkProvider {
             
             if let error = error as NSError? {
                 
-                let networkError = (error.code == NSURLErrorNotConnectedToInternet) ? ReportError.connectionError : ReportError.networkError(error)
-                completion(nil, networkError)
+                if error.code == NSURLErrorNotConnectedToInternet {
+                    completion(nil, ReportError.connectionError)
+                } else {
+                    completion(nil, ReportError.networkError(error))
+                }
+                return
             }
             
             guard let response = response as? HTTPURLResponse else {

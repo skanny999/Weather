@@ -15,7 +15,7 @@ struct WeatherReport: Codable {
     private let main: Main?
     private let weather: [Weather]?
     
-    let lastUpdated = Date()
+    var lastUpdated: Date?
     
     var conditions: String? {
         return weather?.first?.main
@@ -48,7 +48,7 @@ struct WeatherReport: Codable {
     
     var isStillValid: Bool {
         
-        return lastUpdated.isLessThan24HoursAgo
+        return lastUpdated?.isLessThan24HoursAgo ?? false
     }
 }
 

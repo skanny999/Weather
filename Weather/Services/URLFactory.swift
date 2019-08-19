@@ -17,7 +17,7 @@ struct URLFactory {
         let latitude = String(location.coordinate.latitude)
         let longitude = String(location.coordinate.longitude)
         
-        let urlString = "https://api.openweathermap.org/data/2.5/weather?lat=\(latitude)&lon=\(longitude)&APPID=\(Constant.apiKey)"
+        let urlString = "https://api.openweathermap.org/data/2.5/weather?lat=\(latitude)&lon=\(longitude)&units=metric&APPID=\(Constant.apiKey)"
         
         guard let url = URL(string: urlString) else {
             fatalError("Invalid string for url")
@@ -29,7 +29,7 @@ struct URLFactory {
         
         guard let iconString = iconString else { return nil }
         
-        let urlString = "http://openweathermap.org/img/w/\(iconString)"
+        let urlString = "http://openweathermap.org/img/w/\(iconString).png"
         guard let url = URL(string: urlString) else {
             fatalError("Invalid string for url")
         }
