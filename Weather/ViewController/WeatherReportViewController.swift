@@ -30,14 +30,16 @@ class WeatherReportViewController: UIViewController {
     
     weak var delegate: WeatherReportViewControllerDelegate?
     
-    var viewModel = WeatherReportViewModel()
+    var viewModel: WeatherReportViewModel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.delegate = viewModel
         configureBar()
-        updateReportLabels()
+        viewModel = WeatherReportViewModel()
         configureViewModelUpdater()
+        self.delegate = viewModel
+        updateReportLabels()
+        spinner.startAnimating()
     }
     
     private func configureBar() {
@@ -63,9 +65,9 @@ class WeatherReportViewController: UIViewController {
             }
         }
         
-        viewModel.displaySpinner = { (shouldSpin) in
+        viewModel.displaySpinner = { [weak self] (shouldSpin) in
             
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                shouldSpin ? self?.spinner.startAnimating() : self?.spinner.stopAnimating()
             }
         }

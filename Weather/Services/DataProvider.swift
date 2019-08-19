@@ -31,9 +31,9 @@ class DataProvider {
     private func configureMonitor() {
         
         monitor.pathUpdateHandler = { path in
-            
             self.isConnected = path.status == .satisfied
         }
+        
         let queue = DispatchQueue(label: "Monitor")
         monitor.start(queue: queue)
     }
@@ -55,8 +55,6 @@ class DataProvider {
             LocationManager.shared.requestUpdateLocation()
         }
     }
-    
-
 }
 
 

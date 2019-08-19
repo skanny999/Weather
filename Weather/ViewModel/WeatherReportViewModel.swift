@@ -40,6 +40,7 @@ class WeatherReportViewModel {
             self?.weatherReport = weatherReport
             self?.updateReport?()
         }
+        
     }
     
     //test initializer
@@ -50,7 +51,6 @@ class WeatherReportViewModel {
     
     
     // View Updater
-    
     
     var updateReport: (() -> Void)?
     var displayAlert: ((ReportError) -> Void)?
@@ -114,7 +114,7 @@ extension WeatherReportViewModel: WeatherReportViewControllerDelegate {
     
     func viewControllerDidTapRefresh(_ viewController: UIViewController) {
         
-        DataProvider.shared.getWeatherReport(isRefreshing: true)
         displaySpinner?(true)
+        DataProvider.shared.getWeatherReport(isRefreshing: true)
     }
 }
